@@ -74,6 +74,21 @@ class Bullet(pygame.sprite.Sprite):
         """ Move the bullet. """
         self.rect.y -= 5
 
+class enemyBullet(pygame.sprite.Sprite):
+    """ This class represents the bullet . """
+    def __init__(self):
+        # Call the parent class (Sprite) constructor
+        super().__init__()
+
+        self.image = pygame.Surface([4, 10])
+        self.image.fill(RED)
+
+        self.rect = self.image.get_rect()
+
+    def update(self):
+        """ Move the bullet. """
+        self.rect.y += 5
+
 # --- Create the window
 
 # Initialize Pygame
@@ -97,7 +112,7 @@ block_list = pygame.sprite.Group()
 
 # List of each bullet
 bullet_list = pygame.sprite.Group()
-
+enemy_bullet_list = pygame.sprite.Group()
 player_list = pygame.sprite.Group()
 # --- Create the sprites
 for i in range (1):
@@ -124,9 +139,10 @@ done = False
 
 # Used to manage how fast the screen updates
 clock = pygame.time.Clock()
-
+level_over = False
 score = 0
 player.rect.y = 375
+lives = 1
 # -------- Main Program Loop -----------
 
 
@@ -143,7 +159,7 @@ while not done:
             # Fire a bullet if the user clicks the mouse button
 
             bullet = Bullet()
-
+            enemyB = enemyBullet()
             # Set the bullet so it is where the player is
             bullet.rect.x = player.rect.x + 13
             bullet.rect.y = player.rect.y
@@ -155,6 +171,14 @@ while not done:
             click_sound.play()
             print ("User left-clicked")
             print (bullet.rect.y)
+        elif block.rect.x % 1 == 0 and level_over == False:
+                enemyB = enemyBullet()
+                enemyB.rect.x = block.rect.x
+                enemyB.rect.y = block.rect.y
+                all_sprites_list.add(enemyB)
+                enemy_bullet_list.add(enemyB)
+
+
 
     # --- Game logic
 
@@ -174,7 +198,8 @@ while not done:
             score += 1
             death_sound.play()
             print(score)
-
+            if score >= 20:
+                level_over = True
         # Remove the bullet if it flies up off the screen
         if bullet.rect.y < -10:
             bullet_list.remove(bullet)
@@ -183,11 +208,20 @@ while not done:
     for player in player_list:
 
         player_hit_list = pygame.sprite.spritecollide(player, block_list, True)
-        print (player_hit_list)
+
         for block in player_hit_list:
             player_list.remove(player)
             all_sprites_list.remove(player)
             death_sound.play()
+
+    for player in player_list:
+        player_hit_by_bullet = pygame.sprite.spritecollide(player, enemy_bullet_list, True)
+        for enemyB in player_hit_by_bullet:
+            player_list.remove(player)
+            all_sprites_list.remove(player)
+            death_sound.play()
+            lives -= 1
+
 
 
 
@@ -197,6 +231,11 @@ while not done:
     font = pygame.font.SysFont('Calibri', 25, True, False)
     text = font.render("Score: %s" %(score), True, WHITE)
     screen.blit(text, [250, 250])
+    if lives < 1:
+
+        game_over_text = font.render("GAME OVER", True, WHITE)
+        screen.blit(game_over_text, [50, 50])
+
     # Clear the screen
 
 
